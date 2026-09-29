@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff8f2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="유현로그">
+<title>유현로그</title>
+<style>
+:root{--bg:#fffaf6;--card:#fff;--ink:#2d2b2a;--muted:#847b76;--line:#eee2d9;--pink:#f8d8df;--green:#e6f2e9;--blue:#e6e8f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;color:var(--ink)}
+.app{max-width:720px;margin:auto;padding:calc(16px + env(safe-area-inset-top)) 14px calc(86px + env(safe-area-inset-bottom))}
+h1{margin:0;font-size:27px}.sub{font-size:12px;color:var(--muted);margin:5px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px;margin:11px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:0;border-radius:17px;padding:17px 10px;font-size:16px;font-weight:700;background:var(--pink);min-height:60px}.diaper{background:var(--green)}.sleep{background:var(--blue)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{border:1px solid var(--line);border-radius:14px;padding:11px;background:#fffaf8}.metric small{display:block;color:var(--muted)}.metric b{font-size:17px;display:block;margin-top:4px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:16px;background:#fff}
+.timeline .item{display:flex;align-items:center;gap:8px;padding:11px 2px;border-bottom:1px solid #f2eae4}.time{width:52px;color:var(--muted);font-size:13px}.label{flex:1;font-weight:700}.detail{color:var(--muted);font-size:12px;margin-left:6px}.x{border:0;background:transparent;font-size:18px}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:#ffffffed;border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:flex;gap:8px}.tab{flex:1;border:0;background:transparent;padding:10px;border-radius:12px;font-weight:700;color:var(--muted)}.tab.on{background:#fff0e9;color:#8b5135}
+.hidden{display:none!important}.sheet{position:fixed;inset:0;background:#0005;display:flex;align-items:flex-end;z-index:10}.box{width:100%;max-width:720px;margin:auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 15px calc(18px + env(safe-area-inset-bottom))}.box h3{margin:0 0 14px}.save{width:100%;margin-top:12px;background:#f1a47a;color:#fff}.toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#302b29;color:#fff;padding:10px 14px;border-radius:99px;z-index:99;font-size:13px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 3px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>유현로그 👶🏻</h1><div class="sub" id="today"></div>
+
+<section id="todayView">
+<div class="card"><div id="summary" class="sum"></div></div>
+<div class="card">
+  <b>빠른 기록</b>
+  <div class="grid" style="margin-top:10px">
+    <button class="btn" onclick="openFeed('formula')">🍼 분유</button>
+    <button class="btn" onclick="openFeed('breast')">🤱 직수</button>
+    <button class="btn" onclick="openFeed('expressed')">🥛 유축모유</button>
+    <button class="btn diaper" onclick="add('pee')">💧 소변</button>
+    <button class="btn diaper" onclick="add('poop')">💩 대변</button>
+    <button class="btn diaper" onclick="add('both')">💧💩 둘 다</button>
+    <button class="btn sleep" onclick="add('sleep')">🌙 잠들었어</button>
+    <button class="btn sleep" onclick="add('wake')">☀️ 일어났어</button>
+  </div>
+</div>
+<div class="card">
+  <div class="row"><b>기록</b><input id="datePick" type="date" onchange="render()"></div>
+  <div id="timeline" class="timeline"></div>
+</div>
+</section>
+
+<section id="compareView" class="hidden"><div class="card"><b>최근 7일 비교</b><div id="compare" style="overflow:auto;margin-top:10px"></div></div></section>
+<section id="settingsView" class="hidden">
+<div class="card"><b>Siri 빠른 기록</b>
+<p class="small">아이폰 단축어의 “URL 열기”에서 이 앱 주소 뒤에 아래 값을 붙이면 돼.</p>
+<p class="small">분유: <code>?quick=formula&ml=80</code><br>
+유축모유: <code>?quick=expressed&ml=80</code><br>
+직수: <code>?quick=breast&side=left&min=15</code><br>
+소변: <code>?quick=pee</code> / 대변: <code>?quick=poop</code><br>
+잠듦: <code>?quick=sleep</code> / 기상: <code>?quick=wake</code></p>
+</div>
+<div class="card"><b>백업</b><p class="small">기록은 이 아이폰 브라우저에 저장돼.</p><button class="btn" style="width:100%" onclick="backup()">JSON 백업 받기</button></div>
+</section>
+</div>
+
+<div class="tabs">
+<button id="t1" class="tab on" onclick="tab('today')">오늘</button>
+<button id="t2" class="tab" onclick="tab('compare')">7일 비교</button>
+<button id="t3" class="tab" onclick="tab('settings')">Siri·백업</button>
+</div>
+
+<div id="sheet" class="sheet hidden"><div class="box"><h3 id="sheetTitle">수유 기록</h3><div id="fields"></div><button class="btn save" onclick="saveFeed()">저장</button><button class="btn" style="width:100%;margin-top:8px;background:#f2efed" onclick="closeSheet()">취소</button></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const KEY='yuhyun-log-v1';let logs=JSON.parse(localStorage.getItem(KEY)||'[]');let feedType=null;
+const $=s=>document.querySelector(s);
+function dk(d){d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function time(t){return new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}
+function save(){localStorage.setItem(KEY,JSON.stringify(logs));render()}
+function toast(s){let x=$('#toast');x.textContent=s;x.classList.remove('hidden');setTimeout(()=>x.classList.add('hidden'),1300)}
+function add(type,data={}){logs.push({id:Date.now()+Math.random(),type,ts:new Date().toISOString(),...data});save();toast('기록했어 ✓')}
+function openFeed(t){feedType=t;$('#sheetTitle').textContent={formula:'분유',breast:'직수',expressed:'유축모유'}[t]+' 기록';$('#fields').innerHTML=t==='breast'?'<div class="row"><div><small>수유 쪽</small><select id="side"><option value="left">왼쪽</option><option value="right">오른쪽</option><option value="both">양쪽</option></select></div><div><small>시간(분)</small><input id="mins" type="number" inputmode="numeric" placeholder="15"></div></div>':'<small>양(ml)</small><input id="ml" type="number" inputmode="numeric" placeholder="80">';$('#sheet').classList.remove('hidden')}
+function closeSheet(){$('#sheet').classList.add('hidden');feedType=null}
+function saveFeed(){if(feedType==='breast'){let m=Number($('#mins').value);if(!m)return toast('시간을 입력해줘');add('breast',{side:$('#side').value,min:m})}else{let m=Number($('#ml').value);if(!m)return toast('양을 입력해줘');add(feedType,{ml:m})}closeSheet()}
+function label(x){if(x.type==='formula')return '분유 <span class="detail">'+(x.ml||0)+'ml</span>';if(x.type==='expressed')return '유축모유 <span class="detail">'+(x.ml||0)+'ml</span>';if(x.type==='breast')return '직수 <span class="detail">'+({left:'왼쪽',right:'오른쪽',both:'양쪽'}[x.side]||'')+' '+(x.min||0)+'분</span>';return {pee:'소변',poop:'대변',both:'소변+대변',sleep:'잠듦',wake:'기상'}[x.type]||x.type}
+function remove(id){if(confirm('이 기록을 삭제할까?')){logs=logs.filter(x=>x.id!=id);save()}}
+function sleepMin(day){let a=logs.slice().sort((x,y)=>new Date(x.ts)-new Date(y.ts)),start=null,total=0;a.forEach(x=>{if(x.type==='sleep')start=new Date(x.ts);if(x.type==='wake'&&start){let e=new Date(x.ts);if(dk(start)===day||dk(e)===day)total+=(e-start)/60000;start=null}});if(start&&dk(start)===day)total+=(new Date()-start)/60000;return Math.max(0,Math.round(total))}
+function stats(day){let a=logs.filter(x=>dk(x.ts)===day);return {f:a.filter(x=>x.type==='formula').reduce((s,x)=>s+Number(x.ml||0),0),e:a.filter(x=>x.type==='expressed').reduce((s,x)=>s+Number(x.ml||0),0),b:a.filter(x=>x.type==='breast').reduce((s,x)=>s+Number(x.min||0),0),n:a.filter(x=>['formula','expressed','breast'].includes(x.type)).length,p:a.filter(x=>x.type==='pee'||x.type==='both').length,o:a.filter(x=>x.type==='poop'||x.type==='both').length,s:sleepMin(day)}}
+function ago(x){if(!x)return '기록 없음';let m=Math.max(0,Math.floor((new Date()-new Date(x.ts))/60000));return m<60?m+'분 전':Math.floor(m/60)+'시간 '+m%60+'분 전'}
+function render(){let today=dk(new Date());$('#today').textContent=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'})+' · 유현이 기록';if(!$('#datePick').value)$('#datePick').value=today;let sorted=logs.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts)),sf=sorted.find(x=>['formula','expressed','breast'].includes(x.type)),sd=sorted.find(x=>['pee','poop','both'].includes(x.type)),s=stats(today);$('#summary').innerHTML='<div class="metric"><small>마지막 수유</small><b>'+ago(sf)+'</b><small>오늘 '+s.n+'회</small></div><div class="metric"><small>마지막 기저귀</small><b>'+ago(sd)+'</b><small>💧 '+s.p+' · 💩 '+s.o+'</small></div><div class="metric"><small>오늘 수유</small><b>분유 '+s.f+'ml</b><small>유축 '+s.e+'ml · 직수 '+s.b+'분</small></div><div class="metric"><small>오늘 수면</small><b>'+Math.floor(s.s/60)+'시간 '+s.s%60+'분</b></div>';let day=$('#datePick').value,a=logs.filter(x=>dk(x.ts)===day).sort((x,y)=>new Date(y.ts)-new Date(x.ts));$('#timeline').innerHTML=a.length?a.map(x=>'<div class="item"><span class="time">'+time(x.ts)+'</span><span class="label">'+label(x)+'</span><button class="x" onclick="remove(\''+x.id+'\')">×</button></div>').join(''):'<p class="small">아직 기록이 없어.</p>';renderCompare()}
+function renderCompare(){let ds=[];for(let i=6;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);ds.push(dk(d))}$('#compare').innerHTML='<table><tr><th>날짜</th><th>분유</th><th>유축</th><th>직수</th><th>수유</th><th>💧</th><th>💩</th><th>수면</th></tr>'+ds.map(d=>{let s=stats(d);return '<tr><td>'+d.slice(5)+'</td><td>'+s.f+'</td><td>'+s.e+'</td><td>'+s.b+'분</td><td>'+s.n+'</td><td>'+s.p+'</td><td>'+s.o+'</td><td>'+Math.floor(s.s/60)+'h '+s.s%60+'m</td></tr>'}).join('')+'</table>'}
+function tab(t){['today','compare','settings'].forEach((n,i)=>{$('#'+n+'View').classList.toggle('hidden',n!==t);$('#t'+(i+1)).classList.toggle('on',n===t)});if(t==='compare')renderCompare()}
+function backup(){let b=new Blob([JSON.stringify(logs,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='유현로그_'+dk(new Date())+'.json';a.click();URL.revokeObjectURL(a.href)}
+function quick(){let q=new URLSearchParams(location.search),t=q.get('quick');if(!t)return;if(t==='formula'||t==='expressed'){let ml=Number(q.get('ml'));if(ml)add(t,{ml})}else if(t==='breast'){let m=Number(q.get('min'));if(m)add('breast',{side:q.get('side')||'left',min:m})}else if(['pee','poop','both','sleep','wake'].includes(t))add(t);history.replaceState({},'',location.pathname)}
+window.remove=remove;render();quick();setInterval(render,60000);
+</script>
+</body></html>
